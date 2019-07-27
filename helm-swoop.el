@@ -92,6 +92,7 @@
 (require 'helm-grep)
 
 (declare-function migemo-search-pattern-get "migemo")
+(declare-function migemo-forward "migemo")
 (declare-function projectile-buffers-with-file-or-process "projectile")
 (declare-function projectile-project-buffers "projectile")
 (defvar projectile-buffers-filter-function)
@@ -648,7 +649,7 @@ If $linum is number, lines are separated by $linum"
   (ad-disable-advice 'helm-move--previous-line-fn 'around
                      'helm-multi-swoop-previous-line-cycle)
   (ad-activate 'helm-move--previous-line-fn)
-  (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+  (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-swoop-pattern)
   (mapc (lambda ($ov)
@@ -1187,7 +1188,7 @@ If $linum is number, lines are separated by $linum"
           (ad-enable-advice 'helm-move--previous-line-fn 'around
                             'helm-multi-swoop-previous-line-cycle)
           (ad-activate 'helm-move--previous-line-fn)
-          (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
+          (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
           (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
           (setq helm-swoop-line-overlay
                 (make-overlay (point) (point)))
@@ -1229,7 +1230,7 @@ If $linum is number, lines are separated by $linum"
         (ad-disable-advice 'helm-move--previous-line-fn 'around
                            'helm-multi-swoop-previous-line-cycle)
         (ad-activate 'helm-move--previous-line-fn)
-        (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+        (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
         (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
         (setq helm-multi-swoop-last-query helm-swoop-pattern)
         (helm-swoop--restore-unveiled-overlay)
