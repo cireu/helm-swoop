@@ -89,6 +89,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'dash)
 (require 'helm)
 (require 'helm-utils)
 (require 'helm-grep)
@@ -469,34 +470,23 @@ This function needs to call after latest helm-swoop-line-overlay set."
         (setq helm-swoop-last-line-info
               (cons helm-swoop-target-buffer $num))))))
 
-(defun helm-swoop--nearest-line ($target $list)
-  "Return the nearest number of $target out of $list."
-  (when (and $target $list)
-    (let ($result)
-      (cl-labels ((filter ($fn $elem $list)
-                    (let ($r)
-                      (mapc (lambda ($e)
-                              (if (funcall $fn $elem $e)
-                                  (setq $r (cons $e $r))))
-                            $list) $r)))
-        (if (eq 1 (length $list))
-            (setq $result (car $list))
-          (let* (($lts (filter '> $target $list))
-                 ($gts (filter '< $target $list))
-                 ($lt (if $lts (apply 'max $lts)))
-                 ($gt (if $gts (apply 'min $gts)))
-                 ($ltg (if $lt (- $target $lt)))
-                 ($gtg (if $gt (- $gt $target))))
-            (setq $result
-                  (cond ((memq $target $list) $target)
-                        ((and (not $lt) (not $gt)) nil)
-                        ((not $gtg) $lt)
-                        ((not $ltg) $gt)
-                        ((eq $ltg $gtg) $gt)
-                        ((< $ltg $gtg) $lt)
-                        ((> $ltg $gtg) $gt)
-                        (t 1))))))
-      $result)))
+(defun helm-swoop--nearest-line (target list)
+  "Return the nearest number of TARGET out of LIST."
+  (when (and target list)
+    (cond ((null (cdr list)) (car list))
+          ((memq target list) target)
+          ((let ((max (-max list))
+                 (min (-min list)))
+             (or (if (>= target max) max)
+                 (if (<= target min) min))))
+          (t
+           (let* ((lst (-sort #'< (cons target list)))
+                  (pos (--find-index (= target it) lst))
+                  (l (nth (- pos 1) lst))
+                  (r (nth (+ pos 1) lst))
+                  (l-dist (- target l))
+                  (r-dist (- r target)))
+             (if (> l-dist r-dist) r l))))))
 
 (defun helm-swoop--keep-nearest-position ()
   (with-helm-window
@@ -514,8 +504,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
                            (string-to-number (match-string 0))
                            $list)))
             (setq $nearest-line (helm-swoop--nearest-line
-                            (cdr helm-swoop-last-line-info)
-                            $list))
+                                 (cdr helm-swoop-last-line-info)
+                                 $list))
             (goto-char $p)
             (re-search-forward (concat "^"
                                        (number-to-string $nearest-line)
@@ -1273,7 +1263,7 @@ Last selected buffers will be applied to helm-multi-swoop.
       (helm-multi-swoop--exec nil
                               :$query helm-multi-swoop-query
                               :$buflist (get-buffers-matching-mode $mode))
-    (message "there are no buffers in that mode right now")))
+    (message "there are no buffers in that mode r now")))
 
 ;;;###autoload
 (defun helm-multi-swoop-org (&optional $query)
