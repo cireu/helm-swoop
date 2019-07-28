@@ -682,11 +682,11 @@ If $linum is number, lines are separated by $linum"
   (deactivate-mark t))
 
 ;;;###autoload
-(cl-defun helm-swoop (&key $query $source ($multiline current-prefix-arg))
+(cl-defun helm-swoop (&key $query $source $multiline)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list."
-  (interactive)
+  (interactive (list :$multiline current-prefix-arg))
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point (cons (point) (buffer-name (current-buffer))))
   (setq helm-swoop-last-line-info
