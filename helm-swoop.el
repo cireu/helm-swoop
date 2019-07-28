@@ -180,21 +180,55 @@
 (defvar helm-swoop-line-overlay nil
   "Overlay object to indicate other window's line")
 
+(defvar helm-swoop--basic-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (dolist (action '(next-line previous-line next-page previous-page
+                      beginning-of-buffer end-of-buffer toggle-visible-mark))
+      (let ((orig-fn (intern (format "helm-%s" action)))
+            (new-fn (intern (format "helm-swoop-%s" action))))
+        (defalias new-fn `(lambda (arg)
+                            (interactive "p")
+                            (call-interactively ',orig-fn)
+                            (helm-swoop--move-line-action)))
+        (put new-fn 'function-documentation "\
+Replacement of original `helm' action for `helm-swoop'.
+
+\(fn ARG)")
+        (define-key map `[remap ,orig-fn] new-fn)))
+    map))
+
 (defvar helm-swoop-map
   (let (($map (make-sparse-keymap)))
-    (set-keymap-parent $map helm-map)
+    (set-keymap-parent $map helm-swoop--basic-map)
     (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (define-key $map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
-    (define-key $map (kbd "^") 'helm-swoop-caret-match)
-    (delq nil $map))
+    (define-key $map (kbd "^") 'helm-swoop-caret-match))
   "Keymap for helm-swoop")
+
+(defvar helm-multi-swoop--basic-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (dolist (action '(next-line previous-line next-page previous-page
+                      beginning-of-buffer end-of-buffer toggle-visible-mark))
+      (let ((orig-fn (intern (format "helm-%s" action)))
+            (new-fn (intern (format "helm-swoop-%s" action))))
+        (defalias new-fn `(lambda (arg)
+                            (interactive "p")
+                            (call-interactively ',orig-fn)
+                            (helm-multi-swoop--move-line-action)))
+        (put new-fn 'function-documentation "\
+Replacement of original `helm' action for `helm-multi-swoop'.
+
+\(fn ARG)")
+        (define-key map `[remap ,orig-fn] new-fn)))
+    map))
 
 (defvar helm-multi-swoop-map
   (let (($map (make-sparse-keymap)))
-    (set-keymap-parent $map helm-map)
-    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
-    (delq nil $map)))
+    (set-keymap-parent $map helm-multi-swoop--basic-map)
+    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)))
 
 (defvar helm-c-source-swoop-match-functions
   '(helm-mm-exact-match
@@ -414,24 +448,6 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 ;; helm action ------------------------------------------------
 
-(defadvice helm-next-line (around helm-swoop-next-line disable)
-  (let ((helm-move-to-line-cycle-in-source t))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-swoop--move-line-action))))
-
-(defadvice helm-previous-line (around helm-swoop-previous-line disable)
-  (let ((helm-move-to-line-cycle-in-source t))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-swoop--move-line-action))))
-
-(defadvice helm-toggle-visible-mark (around helm-swoop-toggle-visible-mark disable)
-  (let ((helm-move-to-line-cycle-in-source t))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-swoop--move-line-action))))
-
 (defun helm-swoop--move-line-action ()
   (with-helm-window
     (let* (($key (helm-swoop--get-string-at-line))
@@ -454,11 +470,11 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (when (and $target $list)
     (let ($result)
       (cl-labels ((filter ($fn $elem $list)
-                          (let ($r)
-                            (mapc (lambda ($e)
-                                    (if (funcall $fn $elem $e)
-                                        (setq $r (cons $e $r))))
-                                  $list) $r)))
+                    (let ($r)
+                      (mapc (lambda ($e)
+                              (if (funcall $fn $elem $e)
+                                  (setq $r (cons $e $r))))
+                            $list) $r)))
         (if (eq 1 (length $list))
             (setq $result (car $list))
           (let* (($lts (filter '> $target $list))
@@ -639,12 +655,8 @@ If $linum is number, lines are separated by $linum"
     (helm-swoop-back-to-last-point t)
     (helm-swoop--restore-unveiled-overlay))
   (setq helm-swoop-invisible-targets nil)
-  (ad-disable-advice 'helm-next-line 'around 'helm-swoop-next-line)
-  (ad-activate 'helm-next-line)
-  (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
-  (ad-activate 'helm-previous-line)
-  (ad-disable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)
-  (ad-activate 'helm-toggle-visible-mark)
+  (remove-hook 'helm-move-selection-after-hook
+               'helm-multi-swoop--move-line-action)
   (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-swoop-pattern)
@@ -680,19 +692,7 @@ If $linum is number, lines are separated by $linum"
   (unwind-protect
        (progn
          ;; For synchronizing line position
-         (ad-enable-advice 'helm-next-line 'around 'helm-swoop-next-line)
-         (ad-activate 'helm-next-line)
-         (ad-enable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
-         (ad-activate 'helm-previous-line)
-         (ad-enable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)
-         (ad-activate 'helm-toggle-visible-mark)
-         (ad-enable-advice 'helm-move--next-line-fn 'around
-                           'helm-multi-swoop-next-line-cycle)
-         (ad-activate 'helm-move--next-line-fn)
-         (ad-enable-advice 'helm-move--previous-line-fn 'around
-                           'helm-multi-swoop-previous-line-cycle)
-         (ad-activate 'helm-move--previous-line-fn)
-         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
+         (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
          (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
          (cond ($query
                 (if (string-match
@@ -1026,24 +1026,6 @@ If $linum is number, lines are separated by $linum"
 (defvar helm-multi-swoop-projectile-buffers-filter
   #'projectile-buffers-with-file-or-process)
 ;; action -----------------------------------------------------
-
-(defadvice helm-next-line (around helm-multi-swoop-next-line disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-previous-line (around helm-multi-swoop-previous-line disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-toggle-visible-mark (around helm-multi-swoop-toggle-visible-mark disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
 
 (defun helm-multi-swoop--move-line-action ()
   (with-helm-window
