@@ -87,6 +87,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'dash)
 (require 'helm)
 (require 'helm-utils)
 (require 'helm-grep)
@@ -507,8 +508,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
                            (string-to-number (match-string 0))
                            $list)))
             (setq $nearest-line (helm-swoop--nearest-line
-                            (cdr helm-swoop-last-line-info)
-                            $list))
+                                 (cdr helm-swoop-last-line-info)
+                                 $list))
             (goto-char $p)
             (re-search-forward (concat "^"
                                        (number-to-string $nearest-line)
@@ -1332,7 +1333,7 @@ Last selected buffers will be applied to helm-multi-swoop.
       (helm-multi-swoop--exec nil
                               :$query helm-multi-swoop-query
                               :$buflist (get-buffers-matching-mode $mode))
-    (message "there are no buffers in that mode right now")))
+    (message "there are no buffers in that mode r now")))
 
 ;;;###autoload
 (defun helm-multi-swoop-org (&optional $query)
