@@ -167,7 +167,6 @@
 (defvar helm-swoop-last-line-info nil)
 
 ;; Buffer local variables
-(defvar helm-swoop-list-cache)
 (defvar helm-swoop-pattern)            ; Keep helm-pattern value
 (defvar helm-swoop-last-query)         ; Last search query for resume
 (defvar-local helm-swoop-last-prefix-number 1) ; For multiline highlight
@@ -570,24 +569,6 @@ If $linum is number, lines are separated by $linum"
   (setq helm-swoop-last-prefix-number
         (or $multiline 1))) ;; $multiline is for resume
 
-;; Delete cache when modified file is saved
-(defun helm-swoop--clear-cache ()
-  (if (boundp 'helm-swoop-list-cache) (setq helm-swoop-list-cache nil)))
-(add-hook 'after-save-hook 'helm-swoop--clear-cache)
-
-(defadvice narrow-to-region (around helm-swoop-advice-narrow-to-region activate)
-  (helm-swoop--clear-cache)
-  ad-do-it)
-(defadvice narrow-to-defun (around helm-swoop-advice-narrow-to-defun activate)
-  (helm-swoop--clear-cache)
-  ad-do-it)
-(defadvice narrow-to-page (around helm-swoop-advice-narrow-to-page activate)
-  (helm-swoop--clear-cache)
-  ad-do-it)
-(defadvice widen (around helm-swoop-advice-widen activate)
-  (helm-swoop--clear-cache)
-  ad-do-it)
-
 (defun helm-swoop--restore ()
   (when (= 1 helm-exit-status)
     (helm-swoop-back-to-last-point t)
@@ -637,11 +618,6 @@ If $linum is number, lines are separated by $linum"
                'face (if (< 1 helm-swoop-last-prefix-number)
                          'helm-swoop-target-line-block-face
                        'helm-swoop-target-line-face))
-  ;; Cache
-  (cond ((not (boundp 'helm-swoop-list-cache))
-         (set (make-local-variable 'helm-swoop-list-cache) nil))
-        ((buffer-modified-p)
-         (setq helm-swoop-list-cache nil)))
   (unwind-protect
       (progn
         ;; For synchronizing line position
