@@ -167,8 +167,8 @@
 (defvar helm-swoop-last-line-info nil)
 
 ;; Buffer local variables
-(defvar helm-swoop-pattern)            ; Keep helm-pattern value
-(defvar helm-swoop-last-query)         ; Last search query for resume
+(defvar helm-swoop-pattern nil)            ; Keep helm-pattern value
+(defvar helm-swoop-last-query nil)         ; Last search query for resume
 (defvar-local helm-swoop-last-prefix-number 1) ; For multiline highlight
 
 ;; Global variables
