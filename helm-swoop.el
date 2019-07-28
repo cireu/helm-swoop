@@ -643,12 +643,6 @@ If $linum is number, lines are separated by $linum"
   (ad-activate 'helm-previous-line)
   (ad-disable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)
   (ad-activate 'helm-toggle-visible-mark)
-  (ad-disable-advice 'helm-move--next-line-fn 'around
-                     'helm-multi-swoop-next-line-cycle)
-  (ad-activate 'helm-move--next-line-fn)
-  (ad-disable-advice 'helm-move--previous-line-fn 'around
-                     'helm-multi-swoop-previous-line-cycle)
-  (ad-activate 'helm-move--previous-line-fn)
   (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-swoop-pattern)
@@ -719,7 +713,8 @@ If $linum is number, lines are separated by $linum"
          ;; Execute helm
          (let ((helm-display-function helm-swoop-split-window-function)
                (helm-display-source-at-screen-top nil)
-               (helm-completion-window-scroll-margin 5))
+               (helm-completion-window-scroll-margin 5)
+               (helm-move-to-line-cycle-in-source helm-swoop-move-to-line-cycle))
            (helm :sources
                  (or $source
                      (helm-c-source-swoop))
@@ -1048,30 +1043,6 @@ If $linum is number, lines are separated by $linum"
     (when (called-interactively-p 'any)
       (helm-multi-swoop--move-line-action))))
 
-(defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
-  (if (not (helm-pos-multiline-p))
-      (if (eq (point-max) (save-excursion (forward-line 1) (point)))
-          (when helm-swoop-move-to-line-cycle
-            (helm-beginning-of-buffer)
-            (helm-swoop--recenter))
-        (forward-line 1))
-    (let ((line-num (line-number-at-pos)))
-      (helm-move--next-multi-line-fn)
-      (when (and helm-swoop-move-to-line-cycle
-                 (eq line-num (line-number-at-pos)))
-        (helm-beginning-of-buffer)))))
-
-(defadvice helm-move--previous-line-fn (around helm-multi-swoop-previous-line-cycle disable)
-  (if (not (helm-pos-multiline-p))
-      (forward-line -1)
-    (helm-move--previous-multi-line-fn))
-  (when (and (helm-pos-header-line-p)
-             (eq (point) (save-excursion (forward-line -1) (point))))
-    (when helm-swoop-move-to-line-cycle
-      (helm-end-of-buffer))
-    (when (helm-pos-multiline-p)
-      (helm-move--previous-multi-line-fn))))
-
 (defun helm-multi-swoop--move-line-action ()
   (with-helm-window
     (let* (($key (buffer-substring (point-at-bol) (point-at-eol)))
@@ -1172,43 +1143,37 @@ If $linum is number, lines are separated by $linum"
                     $contents))))))
           $buffs)
     (unwind-protect
-        (progn
-          (ad-enable-advice 'helm-next-line 'around
-                            'helm-multi-swoop-next-line)
-          (ad-activate 'helm-next-line)
-          (ad-enable-advice 'helm-previous-line 'around
-                            'helm-multi-swoop-previous-line)
-          (ad-activate 'helm-previous-line)
-          (ad-enable-advice 'helm-toggle-visible-mark 'around
-                            'helm-multi-swoop-toggle-visible-mark)
-          (ad-activate 'helm-toggle-visible-mark)
-          (ad-enable-advice 'helm-move--next-line-fn 'around
-                            'helm-multi-swoop-next-line-cycle)
-          (ad-activate 'helm-move--next-line-fn)
-          (ad-enable-advice 'helm-move--previous-line-fn 'around
-                            'helm-multi-swoop-previous-line-cycle)
-          (ad-activate 'helm-move--previous-line-fn)
-          (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
-          (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
-          (setq helm-swoop-line-overlay
-                (make-overlay (point) (point)))
-          (overlay-put helm-swoop-line-overlay
-                       'face 'helm-swoop-target-line-face)
-          (helm-swoop--target-line-overlay-move)
-          ;; Execute helm
-          (let ((helm-display-function helm-swoop-split-window-function)
-                (helm-display-source-at-screen-top nil)
-                (helm-completion-window-scroll-margin 5))
-            (helm :sources $contents
-                  :buffer helm-multi-swoop-buffer
-                  :input (or $query helm-multi-swoop-query "")
-                  :prompt helm-swoop-prompt
-                  :candidate-number-limit
-                  helm-multi-swoop-candidate-number-limit
-                  :preselect
-                  (regexp-quote
-                   (format "%s %s" (line-number-at-pos)
-                           (helm-swoop--get-string-at-line))))))
+         (progn
+           (ad-enable-advice 'helm-next-line 'around
+                             'helm-multi-swoop-next-line)
+           (ad-activate 'helm-next-line)
+           (ad-enable-advice 'helm-previous-line 'around
+                             'helm-multi-swoop-previous-line)
+           (ad-activate 'helm-previous-line)
+           (ad-enable-advice 'helm-toggle-visible-mark 'around
+                             'helm-multi-swoop-toggle-visible-mark)
+           (ad-activate 'helm-toggle-visible-mark)
+           (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
+           (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
+           (setq helm-swoop-line-overlay
+                 (make-overlay (point) (point)))
+           (overlay-put helm-swoop-line-overlay
+                        'face 'helm-swoop-target-line-face)
+           (helm-swoop--target-line-overlay-move)
+           ;; Execute helm
+           (let ((helm-display-function helm-swoop-split-window-function)
+                 (helm-display-source-at-screen-top nil)
+                 (helm-completion-window-scroll-margin 5))
+             (helm :sources $contents
+                   :buffer helm-multi-swoop-buffer
+                   :input (or $query helm-multi-swoop-query "")
+                   :prompt helm-swoop-prompt
+                   :candidate-number-limit
+                   helm-multi-swoop-candidate-number-limit
+                   :preselect
+                   (regexp-quote
+                    (format "%s %s" (line-number-at-pos)
+                            (helm-swoop--get-string-at-line))))))
       ;; Restore
       (progn
         (when (= 1 helm-exit-status)
