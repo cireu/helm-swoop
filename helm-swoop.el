@@ -187,7 +187,7 @@
                       beginning-of-buffer end-of-buffer toggle-visible-mark))
       (let ((orig-fn (intern (format "helm-%s" action)))
             (new-fn (intern (format "helm-swoop-%s" action))))
-        (defalias new-fn `(lambda (arg)
+        (defalias new-fn `(lambda (&optional arg)
                             (interactive "p")
                             (call-interactively ',orig-fn)
                             (helm-swoop--move-line-action)))
@@ -204,7 +204,8 @@ Replacement of original `helm' action for `helm-swoop'.
     (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (define-key $map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
-    (define-key $map (kbd "^") 'helm-swoop-caret-match))
+    (define-key $map (kbd "^") 'helm-swoop-caret-match)
+    $map)
   "Keymap for helm-swoop")
 
 (defvar helm-multi-swoop--basic-map
@@ -214,7 +215,7 @@ Replacement of original `helm' action for `helm-swoop'.
                       beginning-of-buffer end-of-buffer toggle-visible-mark))
       (let ((orig-fn (intern (format "helm-%s" action)))
             (new-fn (intern (format "helm-multi-swoop-%s" action))))
-        (defalias new-fn `(lambda (arg)
+        (defalias new-fn `(lambda (&optional arg)
                             (interactive "p")
                             (call-interactively ',orig-fn)
                             (helm-multi-swoop--move-line-action)))
@@ -228,7 +229,8 @@ Replacement of original `helm' action for `helm-multi-swoop'.
 (defvar helm-multi-swoop-map
   (let (($map (make-sparse-keymap)))
     (set-keymap-parent $map helm-multi-swoop--basic-map)
-    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)))
+    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
+    $map))
 
 (defvar helm-c-source-swoop-match-functions
   '(helm-mm-exact-match
