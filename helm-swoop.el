@@ -179,21 +179,55 @@
 (defvar helm-swoop-line-overlay nil
   "Overlay object to indicate other window's line")
 
+(defvar helm-swoop--basic-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (dolist (action '(next-line previous-line next-page previous-page
+                      beginning-of-buffer end-of-buffer toggle-visible-mark))
+      (let ((orig-fn (intern (format "helm-%s" action)))
+            (new-fn (intern (format "helm-swoop-%s" action))))
+        (defalias new-fn `(lambda (&optional arg)
+                            (interactive "p")
+                            (call-interactively ',orig-fn)
+                            (helm-swoop--move-line-action))
+          (format "Replacement of `%s' action for `helm-swoop'.
+
+\(fn ARG)" orig-fn))
+        (define-key map `[remap ,orig-fn] new-fn)))
+    map))
+
 (defvar helm-swoop-map
   (let (($map (make-sparse-keymap)))
-    (set-keymap-parent $map helm-map)
+    (set-keymap-parent $map helm-swoop--basic-map)
     (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (define-key $map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
     (define-key $map (kbd "^") 'helm-swoop-caret-match)
-    (delq nil $map))
+    $map)
   "Keymap for helm-swoop")
+
+(defvar helm-multi-swoop--basic-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (dolist (action '(next-line previous-line next-page previous-page
+                      beginning-of-buffer end-of-buffer toggle-visible-mark))
+      (let ((orig-fn (intern (format "helm-%s" action)))
+            (new-fn (intern (format "helm-multi-swoop-%s" action))))
+        (defalias new-fn `(lambda (&optional arg)
+                            (interactive "p")
+                            (call-interactively ',orig-fn)
+                            (helm-multi-swoop--move-line-action))
+          (format "Replacement of `%s' action for `helm-multi-swoop'.
+
+\(fn ARG)" orig-fn))
+        (define-key map `[remap ,orig-fn] new-fn)))
+    map))
 
 (defvar helm-multi-swoop-map
   (let (($map (make-sparse-keymap)))
-    (set-keymap-parent $map helm-map)
+    (set-keymap-parent $map helm-multi-swoop--basic-map)
     (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
-    (delq nil $map)))
+    $map))
 
 (defvar helm-c-source-swoop-match-functions
   '(helm-mm-exact-match
@@ -410,24 +444,6 @@ This function needs to call after latest helm-swoop-line-overlay set."
                      (overlay-end helm-swoop-line-overlay))))
 
 ;; helm action ------------------------------------------------
-
-(defadvice helm-next-line (around helm-swoop-next-line disable)
-  (let ((helm-move-to-line-cycle-in-source t))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-swoop--move-line-action))))
-
-(defadvice helm-previous-line (around helm-swoop-previous-line disable)
-  (let ((helm-move-to-line-cycle-in-source t))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-swoop--move-line-action))))
-
-(defadvice helm-toggle-visible-mark (around helm-swoop-toggle-visible-mark disable)
-  (let ((helm-move-to-line-cycle-in-source t))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-swoop--move-line-action))))
 
 (defun helm-swoop--move-line-action ()
   (with-helm-window
