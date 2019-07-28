@@ -168,8 +168,8 @@
 (defvar helm-swoop-last-line-info nil)
 
 ;; Buffer local variables
-(defvar helm-swoop-pattern)            ; Keep helm-pattern value
-(defvar helm-swoop-last-query)         ; Last search query for resume
+(defvar helm-swoop-pattern nil)            ; Keep helm-pattern value
+(defvar helm-swoop-last-query nil)         ; Last search query for resume
 (defvar-local helm-swoop-last-prefix-number 1) ; For multiline highlight
 
 ;; Global variables
@@ -213,7 +213,7 @@ Replacement of original `helm' action for `helm-swoop'.
     (dolist (action '(next-line previous-line next-page previous-page
                       beginning-of-buffer end-of-buffer toggle-visible-mark))
       (let ((orig-fn (intern (format "helm-%s" action)))
-            (new-fn (intern (format "helm-swoop-%s" action))))
+            (new-fn (intern (format "helm-multi-swoop-%s" action))))
         (defalias new-fn `(lambda (arg)
                             (interactive "p")
                             (call-interactively ',orig-fn)
