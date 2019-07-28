@@ -1192,65 +1192,35 @@ If $linum is number, lines are separated by $linum"
                     $contents))))))
           $buffs)
     (unwind-protect
-        (progn
-          (ad-enable-advice 'helm-next-line 'around
-                            'helm-multi-swoop-next-line)
-          (ad-activate 'helm-next-line)
-          (ad-enable-advice 'helm-previous-line 'around
-                            'helm-multi-swoop-previous-line)
-          (ad-activate 'helm-previous-line)
-          (ad-enable-advice 'helm-toggle-visible-mark 'around
-                            'helm-multi-swoop-toggle-visible-mark)
-          (ad-activate 'helm-toggle-visible-mark)
-          (ad-enable-advice 'helm-move--next-line-fn 'around
-                            'helm-multi-swoop-next-line-cycle)
-          (ad-activate 'helm-move--next-line-fn)
-          (ad-enable-advice 'helm-move--previous-line-fn 'around
-                            'helm-multi-swoop-previous-line-cycle)
-          (ad-activate 'helm-move--previous-line-fn)
-          (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
-          (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
-          (setq helm-swoop-line-overlay
-                (make-overlay (point) (point)))
-          (overlay-put helm-swoop-line-overlay
-                       'face 'helm-swoop-target-line-face)
-          (helm-swoop--target-line-overlay-move)
-          ;; Execute helm
-          (let ((helm-display-function helm-swoop-split-window-function)
-                (helm-display-source-at-screen-top nil)
-                (helm-completion-window-scroll-margin 5))
-            (helm :sources $contents
-                  :buffer helm-multi-swoop-buffer
-                  :input (or $query helm-multi-swoop-query "")
-                  :prompt helm-swoop-prompt
-                  :candidate-number-limit
-                  helm-multi-swoop-candidate-number-limit
-                  :preselect
-                  (regexp-quote
-                   (format "%s %s" (line-number-at-pos)
-                           (helm-swoop--get-string-at-line))))))
+         (progn
+           (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
+           (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
+           (setq helm-swoop-line-overlay
+                 (make-overlay (point) (point)))
+           (overlay-put helm-swoop-line-overlay
+                        'face 'helm-swoop-target-line-face)
+           (helm-swoop--target-line-overlay-move)
+           ;; Execute helm
+           (let ((helm-display-function helm-swoop-split-window-function)
+                 (helm-display-source-at-screen-top nil)
+                 (helm-completion-window-scroll-margin 5))
+             (helm :sources $contents
+                   :buffer helm-multi-swoop-buffer
+                   :input (or $query helm-multi-swoop-query "")
+                   :prompt helm-swoop-prompt
+                   :candidate-number-limit
+                   helm-multi-swoop-candidate-number-limit
+                   :preselect
+                   (regexp-quote
+                    (format "%s %s" (line-number-at-pos)
+                            (helm-swoop--get-string-at-line))))))
       ;; Restore
       (progn
         (when (= 1 helm-exit-status)
           (helm-swoop-back-to-last-point t)
           (helm-swoop--restore-unveiled-overlay))
         (setq helm-swoop-invisible-targets nil)
-        (ad-disable-advice 'helm-next-line 'around
-                           'helm-multi-swoop-next-line)
-        (ad-activate 'helm-next-line)
-        (ad-disable-advice 'helm-previous-line 'around
-                           'helm-multi-swoop-previous-line)
-        (ad-activate 'helm-previous-line)
-        (ad-disable-advice 'helm-toggle-visible-mark 'around
-                           'helm-multi-swoop-toggle-visible-mark)
-        (ad-activate 'helm-toggle-visible-mark)
-        (ad-disable-advice 'helm-move--next-line-fn 'around
-                           'helm-multi-swoop-next-line-cycle)
-        (ad-activate 'helm-move--next-line-fn)
-        (ad-disable-advice 'helm-move--previous-line-fn 'around
-                           'helm-multi-swoop-previous-line-cycle)
-        (ad-activate 'helm-move--previous-line-fn)
-        (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+        (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
         (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
         (setq helm-multi-swoop-last-query helm-swoop-pattern)
         (helm-swoop--restore-unveiled-overlay)
