@@ -1130,15 +1130,6 @@ If $linum is number, lines are separated by $linum"
           $buffs)
     (unwind-protect
          (progn
-           (ad-enable-advice 'helm-next-line 'around
-                             'helm-multi-swoop-next-line)
-           (ad-activate 'helm-next-line)
-           (ad-enable-advice 'helm-previous-line 'around
-                             'helm-multi-swoop-previous-line)
-           (ad-activate 'helm-previous-line)
-           (ad-enable-advice 'helm-toggle-visible-mark 'around
-                             'helm-multi-swoop-toggle-visible-mark)
-           (ad-activate 'helm-toggle-visible-mark)
            (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
            (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
            (setq helm-swoop-line-overlay
@@ -1166,21 +1157,6 @@ If $linum is number, lines are separated by $linum"
           (helm-swoop-back-to-last-point t)
           (helm-swoop--restore-unveiled-overlay))
         (setq helm-swoop-invisible-targets nil)
-        (ad-disable-advice 'helm-next-line 'around
-                           'helm-multi-swoop-next-line)
-        (ad-activate 'helm-next-line)
-        (ad-disable-advice 'helm-previous-line 'around
-                           'helm-multi-swoop-previous-line)
-        (ad-activate 'helm-previous-line)
-        (ad-disable-advice 'helm-toggle-visible-mark 'around
-                           'helm-multi-swoop-toggle-visible-mark)
-        (ad-activate 'helm-toggle-visible-mark)
-        (ad-disable-advice 'helm-move--next-line-fn 'around
-                           'helm-multi-swoop-next-line-cycle)
-        (ad-activate 'helm-move--next-line-fn)
-        (ad-disable-advice 'helm-move--previous-line-fn 'around
-                           'helm-multi-swoop-previous-line-cycle)
-        (ad-activate 'helm-move--previous-line-fn)
         (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
         (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
         (setq helm-multi-swoop-last-query helm-swoop-pattern)
