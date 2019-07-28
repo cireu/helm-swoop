@@ -1,9 +1,11 @@
 ;;; helm-swoop.el --- Efficiently hopping squeezed lines powered by helm interface -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
+;; Copyright (C) 2019 Zhu Zihao
 
 ;; Version: 1.7.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
+;; Maintainer: Zhu Ziaho <all_but_last@163.com>
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
