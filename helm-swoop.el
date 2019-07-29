@@ -5,7 +5,7 @@
 
 ;; Version: 1.7.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
-;; Maintainer: Zhu Ziaho <all_but_last@163.com>
+;; Maintainer: Zhu Zihao <all_but_last@163.com>
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
