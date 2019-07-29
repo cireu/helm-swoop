@@ -193,11 +193,10 @@
         (defalias new-fn `(lambda (&optional arg)
                             (interactive "p")
                             (call-interactively ',orig-fn)
-                            (helm-swoop--move-line-action)))
-        (put new-fn 'function-documentation "\
-Replacement of original `helm' action for `helm-swoop'.
+                            (helm-swoop--move-line-action))
+          (format "Replacement of `%s' action for `helm-swoop'.
 
-\(fn ARG)")
+\(fn ARG)" orig-fn))
         (define-key map `[remap ,orig-fn] new-fn)))
     map))
 
@@ -221,11 +220,10 @@ Replacement of original `helm' action for `helm-swoop'.
         (defalias new-fn `(lambda (&optional arg)
                             (interactive "p")
                             (call-interactively ',orig-fn)
-                            (helm-multi-swoop--move-line-action)))
-        (put new-fn 'function-documentation "\
-Replacement of original `helm' action for `helm-multi-swoop'.
+                            (helm-multi-swoop--move-line-action))
+          (format "Replacement of `%s' action for `helm-multi-swoop'.
 
-\(fn ARG)")
+\(fn ARG)" orig-fn))
         (define-key map `[remap ,orig-fn] new-fn)))
     map))
 
