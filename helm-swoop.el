@@ -163,10 +163,13 @@
   :group 'helm-swoop
   :type 'hook)
 
-(defcustom helm-swoop-flash-region-function 'helm-swoop-do-flash-region
+(defcustom helm-swoop-flash-region-function 'helm-swoop-flash-word
   "The function used to flash the result when a search done."
   :group 'helm-swoop
-  :type 'function)
+  :type '(choice
+          (const :tag "Default highlight function" helm-swoop-flash-word)
+          (const :tag "Pulse highlight function" pulse-momentary-highlight-region)
+          function))
 
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
