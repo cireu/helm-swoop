@@ -9,7 +9,7 @@
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
-;; Package-Requires: ((helm "3.2") (dash "2.16.0") (emacs "24.3"))
+;; Package-Requires: ((helm "3.2") (emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -89,7 +89,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
 (require 'helm)
 (require 'helm-utils)
 (require 'helm-grep)
@@ -481,13 +480,13 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (when (and target list)
     (cond ((null (cdr list)) (car list))
           ((memq target list) target)
-          ((let ((max (-max list))
-                 (min (-min list)))
+          ((let ((max (apply #'max list))
+                 (min (apply #'min list)))
              (or (if (>= target max) max)
                  (if (<= target min) min))))
           (t
-           (let* ((lst (-sort #'< (cons target list)))
-                  (pos (--find-index (= target it) lst))
+           (let* ((lst (sort (copy-sequence (cons target list)) #'<))
+                  (pos (cl-position target lst))
                   (l (nth (- pos 1) lst))
                   (r (nth (+ pos 1) lst))
                   (l-dist (- target l))
@@ -784,7 +783,7 @@ If $linum is number, lines are separated by $linum"
 
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
-  (around helm-swoop-if-selected-as-resume activate)
+    (around helm-swoop-if-selected-as-resume activate)
   "Resume if *Helm Swoop* buffer selected as a resume
  when helm-resume with prefix"
   (if (boundp 'helm-swoop-last-query)
