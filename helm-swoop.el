@@ -549,8 +549,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 ;; core ------------------------------------------------
 
-(defun helm-swoop--should-fontify? ()
-  "Return non-nil if we should do `font-lock-ensure'."
+(defun helm-swoop--safe-fontify? ()
+  "Return non-nil if safe to do `font-lock-ensure' with buffer."
   (not (or (derived-mode-p 'magit-mode)
            (bound-and-true-p magit-blame-mode)
            (memq major-mode helm-swoop-font-lock-exclude)
@@ -560,7 +560,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
   "Ensure the entired buffer is highlighted."
   (when (and helm-swoop-speed-or-color
              font-lock-mode
-             (helm-swoop--should-fontify?)
+             (helm-swoop--safe-fontify?)
              (< (buffer-size) 100000))
     (if (fboundp 'font-lock-ensure)
         (font-lock-ensure)
