@@ -213,7 +213,6 @@
     (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (define-key $map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
-    (define-key $map (kbd "^") 'helm-swoop-caret-match)
     $map)
   "Keymap for helm-swoop")
 
@@ -584,7 +583,8 @@ If $linum is number, lines are separated by $linum"
                    (spec (format "%%-%dd " width)))
               (cl-loop
                  count :it into idx
-                 for str = (format spec idx)
+                 for str = (propertize (format spec idx)
+                                       'helm-swoop-linum-width (length spec))
                  do (if helm-swoop-use-line-number-face
                         (insert (propertize str
                                             'font-lock-face
@@ -631,7 +631,10 @@ If $linum is number, lines are separated by $linum"
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
-    (search . ,(helm-swoop-search-functions))))
+    (search . ,(helm-swoop-search-functions))
+    (match-part . ,(lambda (cand)
+                     (let ((width (get-text-property 0 'helm-swoop-linum-width cand)))
+                       (substring cand width))))))
 
 (defun helm-c-source-multi-swoop ($buf $func $action $multiline)
   `((name . ,$buf)
@@ -807,41 +810,6 @@ If $linum is number, lines are separated by $linum"
         ;; Temporary apply second last buffer
         (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it))
     ad-do-it))
-
-;; For caret beginning-match -----------------------------
-(defun helm-swoop--caret-match-delete ($o $aft $beg $end &optional $len)
-  (if $aft
-      (- $end $beg $len) ;; Unused argument? To avoid byte compile error
-    (delete-region (overlay-start $o) (1- (overlay-end $o)))))
-
-(defun helm-swoop-caret-match (&optional _$resume)
-  (interactive)
-  (let* (($prompt helm-swoop-prompt) ;; Accept change of the variable
-         ($line-number-regexp "^[0-9]+ +?")
-         ($prompt-regexp
-          (funcall `(lambda ()
-                      (rx bol ,$prompt))))
-         ($prompt-regexp-with-line-number
-          (funcall `(lambda ()
-                      (rx bol ,$prompt (group ,$line-number-regexp)))))
-         ($disguise-caret
-          (lambda ()
-            (save-excursion
-              (re-search-backward $prompt-regexp-with-line-number nil t)
-              (let (($o (make-overlay (match-beginning 1) (match-end 1))))
-                (overlay-put $o 'face 'helm-swoop-target-word-face)
-                (overlay-put $o 'modification-hooks '(helm-swoop--caret-match-delete))
-                (overlay-put $o 'display "^")
-                (overlay-put $o 'evaporate t))))))
-    (if (and (minibufferp)
-             (string-match $prompt-regexp
-                           (buffer-substring-no-properties
-                            (point-min) (point-max)))
-             (eq (point) (+ 1 (length helm-swoop-prompt))))
-        (progn
-          (insert $line-number-regexp)
-          (funcall $disguise-caret))
-      (insert "^"))))
 
 ;;; @ helm-swoop-edit -----------------------------------------
 
